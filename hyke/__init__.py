@@ -63,6 +63,10 @@ class Hyke:
         '''
 
         cli = ["python3", str(self.run_dir / script)] + list(sim_args)
+
+        with open(self.run_dir / 'repeat', 'w') as f:
+            f.write(' '.join(cli) + '\n')
+
         with subprocess.Popen(cli, cwd = str(self.run_dir), bufsize = 1024,
                               universal_newlines = True,
                               stdout = subprocess.PIPE) as proc, \
