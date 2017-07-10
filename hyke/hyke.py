@@ -1,3 +1,4 @@
+import json
 import pathlib
 import shutil
 import subprocess
@@ -61,6 +62,10 @@ class Hyke:
 
         with open(self.run_dir / 'repeat', 'w') as f:
             f.write(' '.join(cli) + '\n')
+
+        with open(self.run_dir / 'repeat.json', 'w') as f:
+            json.dump({'executable': 'python3', 'script': script,
+                       'arguments': sim_args}, f)
 
         with subprocess.Popen(cli, cwd = str(self.run_dir),
                               universal_newlines = True,
