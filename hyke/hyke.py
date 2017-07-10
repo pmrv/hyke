@@ -1,5 +1,4 @@
 import pathlib
-import os
 import shutil
 import subprocess
 import time
@@ -39,15 +38,18 @@ class Hyke:
     def prepare_directory(self, script):
         '''
         Prepare the run directory so that the can be run inside. In particular copy
-        the script into the directory.
+        all files from the sim_base directory into the directory and setup the
+        by-* symlinks.
         '''
 
-        shutil.copy(str(self.sim_base / script), self.run_dir)
-        (self.run_dir / script).chmod(0o0444)
+        for f in filter(lambda f: not f.is_dir(), self.sim_base.glob('*')):
+            shutil.copy(str(f), self.run_dir, follow_symlinks = True)
+            target = self.run_dir / f.name
+            # remove write permissions, to guard against accidental overwriting
+            target.chmod(target.lstat().st_mode & (~0o222))
 
         by_script_link = (self.by_script_base / script)
         by_script_link.mkdir(exist_ok = True)
-
         (by_script_link / self.run_dir.name).symlink_to(self.run_dir)
 
     def execute_script(self, script, sim_args):
