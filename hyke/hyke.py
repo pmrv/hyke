@@ -49,9 +49,29 @@ class Hyke:
             # remove write permissions, to guard against accidental overwriting
             target.chmod(target.lstat().st_mode & (~0o222))
 
-        by_script_link = (self.by_script_base / script)
+        by_script_link = self.by_script_base / script
         by_script_link.mkdir(exist_ok = True)
         (by_script_link / self.run_dir.name).symlink_to(self.run_dir)
+
+        config_file = (self.sim_base / script).parent / '.hyke.json'
+        if config_file.exists():
+            with open(str(config_file)) as f:
+                conf = json.load(f)
+
+            try:
+
+                for f in map(pathlib.Path, conf['linkin']):
+                    if not f.is_absolute():
+                        f = pathlib.Path(*['..'] * len(self.run_dir.relative_to(self.base).parts)) \
+                          / f
+                    (self.run_dir / f.name).symlink_to(f)
+
+                for f in map(pathlib.Path, conf['copyin']):
+                    if not f.is_absolute():
+                        f = self.base / f
+                    shutil.copy(str(f), self.run_dir, follow_symlinks = True)
+            except KeyError as e:
+                pass
 
     def execute_script(self, script, sim_args):
         '''
