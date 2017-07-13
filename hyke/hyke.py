@@ -1,5 +1,6 @@
 import json
-import os.path
+import os
+from os.path import expanduser
 import pathlib
 import shutil
 import subprocess
@@ -17,12 +18,12 @@ class Hyke:
         '''
 
         self.verbose = verbose
-        self.base = pathlib.Path(os.path.expanduser(base)).resolve()
+        self.base = pathlib.Path(expanduser(base)).resolve()
         self.sim_base = self.base / 'sims'
         self.run_base = self.base / 'runs'
 
         self.by_script_base = self.run_base / 'by-script'
-        self.by_script_base.mkdir(exist_ok = True)
+        os.makedirs(str(self.by_script_base), exist_ok = True)
 
     def create_directory(self):
         '''
@@ -45,13 +46,13 @@ class Hyke:
         '''
 
         for f in filter(lambda f: not f.is_dir(), self.sim_base.glob('*')):
-            shutil.copy(str(f), self.run_dir, follow_symlinks = True)
+            shutil.copy(str(f), str(self.run_dir), follow_symlinks = True)
             target = self.run_dir / f.name
             # remove write permissions, to guard against accidental overwriting
             target.chmod(target.lstat().st_mode & (~0o222))
 
         by_script_link = self.by_script_base / script
-        by_script_link.mkdir(exist_ok = True)
+        os.makedirs(str(by_script_link), exist_ok = True)
         (by_script_link / self.run_dir.name).symlink_to(self.run_dir)
 
         config_file = (self.sim_base / script).parent / '.hyke.json'
@@ -72,7 +73,7 @@ class Hyke:
                              conf['copyin']):
                     if not f.is_absolute():
                         f = self.base / f
-                    shutil.copy(str(f), self.run_dir, follow_symlinks = True)
+                    shutil.copy(str(f), str(self.run_dir), follow_symlinks = True)
             except KeyError as e:
                 pass
 
@@ -83,17 +84,17 @@ class Hyke:
 
         cli = ["python3", str(self.run_dir / script)] + list(sim_args)
 
-        with open(self.run_dir / 'repeat', 'w') as f:
+        with open(str(self.run_dir / 'repeat'), 'w') as f:
             f.write(' '.join(cli) + '\n')
 
-        with open(self.run_dir / 'repeat.json', 'w') as f:
+        with open(str(self.run_dir / 'repeat.json'), 'w') as f:
             json.dump({'executable': 'python3', 'script': script,
                        'arguments': sim_args}, f)
 
         with subprocess.Popen(cli, cwd = str(self.run_dir),
                               universal_newlines = True,
                               stdout = subprocess.PIPE) as proc, \
-             open(self.run_dir / 'output', 'w') as out:
+             open(str(self.run_dir / 'output'), 'w') as out:
                  for l in proc.stdout:
                      out.write(l)
                      if self.verbose:
