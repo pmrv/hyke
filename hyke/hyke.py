@@ -1,4 +1,5 @@
 import json
+import os.path
 import pathlib
 import shutil
 import subprocess
@@ -16,7 +17,7 @@ class Hyke:
         '''
 
         self.verbose = verbose
-        self.base = pathlib.Path('test').expanduser().resolve()
+        self.base = pathlib.Path(os.path.expanduser(base)).resolve()
         self.sim_base = self.base / 'sims'
         self.run_base = self.base / 'runs'
 
@@ -60,13 +61,15 @@ class Hyke:
 
             try:
 
-                for f in map(pathlib.Path, conf['linkin']):
+                for f in map(lambda f: pathlib.Path(expanduser(f)),
+                             conf['linkin']):
                     if not f.is_absolute():
                         f = pathlib.Path(*['..'] * len(self.run_dir.relative_to(self.base).parts)) \
                           / f
                     (self.run_dir / f.name).symlink_to(f)
 
-                for f in map(pathlib.Path, conf['copyin']):
+                for f in map(lambda f: pathlib.Path(expanduser(f)),
+                             conf['copyin']):
                     if not f.is_absolute():
                         f = self.base / f
                     shutil.copy(str(f), self.run_dir, follow_symlinks = True)
