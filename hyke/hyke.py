@@ -45,7 +45,12 @@ class Hyke:
         by-* symlinks.
         '''
 
-        for f in filter(lambda f: not f.is_dir(), self.sim_base.glob('*')):
+        script = pathlib.Path(script)
+        script_parent = script.parent
+        script_name   = script.name
+
+        for f in filter(lambda f: not f.is_dir(),
+                        (self.sim_base / script_parent).glob('*')):
             shutil.copy(str(f), str(self.run_dir), follow_symlinks = True)
             target = self.run_dir / f.name
             # remove write permissions, to guard against accidental overwriting
@@ -82,13 +87,18 @@ class Hyke:
         Change into the run directory and execute the script.
         '''
 
-        cli = ["python3", str(self.run_dir / script)] + list(sim_args)
+
+        script = pathlib.Path(script)
+        script_parent = script.parent
+        script_name   = script.name
+
+        cli = ["python3", str(self.run_dir / script_name)] + list(sim_args)
 
         with open(str(self.run_dir / 'repeat'), 'w') as f:
             f.write(' '.join(cli) + '\n')
 
         with open(str(self.run_dir / 'repeat.json'), 'w') as f:
-            json.dump({'executable': 'python3', 'script': script,
+            json.dump({'executable': 'python3', 'script': str(script),
                        'arguments': sim_args}, f)
 
         with subprocess.Popen(cli, cwd = str(self.run_dir),

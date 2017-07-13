@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name = 'hyke',
-      version = '0.1.5',
+      version = '0.1.6',
       description = 'Utility to run scripts and capture their output in a '
                     'repeatable way',
       author = 'Marvin Poul',
